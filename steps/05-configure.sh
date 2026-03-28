@@ -9,7 +9,7 @@ ENABLE_V8=${PDFium_ENABLE_V8:-false}
 IS_DEBUG=${PDFium_IS_DEBUG:-false}
 BUILD_TYPE=${PDFium_BUILD_TYPE:-shared}
 
-mkdir -p "$BUILD"
+rm -rf "$BUILD" && mkdir -p "$BUILD"
 
 (
   echo "is_debug = $IS_DEBUG"
