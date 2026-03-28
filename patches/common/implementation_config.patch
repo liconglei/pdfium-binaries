@@ -4,8 +4,8 @@
  
  config("pdfium_implementation_config") {
    defines = [ "FPDF_IMPLEMENTATION" ]
--  visibility = [ ":pdfium_public_headers" ]
-+  visibility = [ "../*" ]
+-  visibility = [ "../*" ]
++  visibility = [ "//:*" ]
  }
  
  config("pdfium_public_config") {
