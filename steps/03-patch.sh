@@ -11,7 +11,12 @@ BUILD_TYPE=${PDFium_BUILD_TYPE:-shared}
 apply_patch() {
   local FILE="$1"
   local DIR="${2:-.}"
-  patch --verbose -p1 -d "$DIR" -i "$FILE"
+  # Auto-detect patch format: -p0 for patches without a/b prefix, -p1 for patches with a/b prefix
+  local PLEVEL=1
+  if head -n 5 "$FILE" 2>/dev/null | grep -q "^--- "; then
+    PLEVEL=0
+  fi
+  patch --verbose -p"$PLEVEL" -d "$DIR" -i "$FILE"
 }
 
 pushd "${SOURCE}"
