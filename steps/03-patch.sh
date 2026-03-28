@@ -11,7 +11,7 @@ BUILD_TYPE=${PDFium_BUILD_TYPE:-shared}
 apply_patch() {
   local FILE="$1"
   local DIR="${2:-.}"
-  patch --verbose -p0 -d "$DIR" -i "$FILE"
+  patch --verbose -p1 -d "$DIR" -i "$FILE"
 }
 
 pushd "${SOURCE}"
