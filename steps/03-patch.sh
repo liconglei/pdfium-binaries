@@ -13,7 +13,8 @@ apply_patch() {
   local DIR="${2:-.}"
   # Auto-detect patch format: -p0 for patches without a/b prefix, -p1 for patches with a/b prefix
   local PLEVEL=1
-  if head -n 5 "$FILE" 2>/dev/null | grep -qE "^---[ abc-z]"; then
+  # Check if first "---" line does NOT start with "--- a/" or "--- b/" (i.e., no a/b prefix)
+  if head -n 10 "$FILE" 2>/dev/null | grep -qE "^--- [^/ab]"; then
     PLEVEL=0
   fi
   patch --verbose -p"$PLEVEL" -d "$DIR" -i "$FILE"
