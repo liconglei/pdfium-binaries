@@ -1,5 +1,5 @@
---- a/BUILD.gn
-+++ b/BUILD.gn
+--- BUILD.gn
++++ BUILD.gn
 @@ -128,7 +128,7 @@ config("pdfium_strict_config") {
  
  config("pdfium_implementation_config") {
