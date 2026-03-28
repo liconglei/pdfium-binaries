@@ -1,0 +1,10 @@
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -128,7 +128,6 @@ config("pdfium_strict_config") {
+ 
+ config("pdfium_implementation_config") {
+   defines = [ "FPDF_IMPLEMENTATION" ]
+-  visibility = [ ":pdfium_public_headers" ]
+ }
+ 
+ config("pdfium_public_config") {
