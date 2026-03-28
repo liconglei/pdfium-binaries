@@ -23,6 +23,7 @@ apply_patch "$PATCHES/public_headers.patch"
 
 case "$OS" in
   android)
+    apply_patch "$PATCHES/android/fpdfsdk.patch"
     apply_patch "$PATCHES/android/build.patch" build
     ;;
 
