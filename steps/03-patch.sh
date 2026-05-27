@@ -28,13 +28,11 @@ esac
 apply_patch "$PATCHES/public_headers.patch"
 
 # Apply annotation dictionary API extension
-# Insert API declarations into fpdf_annot.h before the closing extern "C" block
-# Insert before the line "#ifdef __cplusplus" (which starts the closing block)
-sed -i '/#ifdef __cplusplus/i #include "fpdf_annot_ext.h"' "$SOURCE/public/fpdf_annot.h"
+# Insert API declarations into fpdf_annot.h inside the extern "C" block
+# Find the last function (FPDFAnnot_AddFileAttachment) and insert after its declaration
 
-# Create the extension header file with new APIs
+# Create the extension header file with new APIs (wrapped in extern "C")
 cat > "$SOURCE/public/fpdf_annot_ext.h" << 'EOF'
-
 // ============================================================================
 // Annotation Dictionary Operations API Extension
 // Provides 11 APIs for complete annotation dictionary manipulation
@@ -108,6 +106,9 @@ FPDFAnnot_SetRefByObjNum(FPDF_ANNOTATION annot,
                          int objNum,
                          int genNum);
 EOF
+
+# Insert include right before the closing "} // extern C" line (inside the extern "C" block)
+sed -i '/^} \/\/ extern "C"/i #include "fpdf_annot_ext.h"' "$SOURCE/public/fpdf_annot.h"
 
 # Append implementation code to fpdf_annot.cpp
 cat "$PATCHES/annot-api/fpdf_annot_append.cpp" >> "$SOURCE/fpdfsdk/fpdf_annot.cpp"
