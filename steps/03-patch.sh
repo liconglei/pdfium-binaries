@@ -108,8 +108,8 @@ FPDFAnnot_SetRefByObjNum(FPDF_ANNOTATION annot,
 EOF
 
 # Insert include right before the closing brace of extern "C" block
-# Match line containing "} // extern" which closes the block
-sed -i '/}.*extern.*C$/i #include "fpdf_annot_ext.h"' "$SOURCE/public/fpdf_annot.h"
+# Use Perl for more reliable multiline matching (sed has issues with line endings)
+perl -i -pe 'print "#include \"fpdf_annot_ext.h\"\n" if /^}\s*\/\/\s*extern\s+"C"/' "$SOURCE/public/fpdf_annot.h"
 
 # Append implementation code to fpdf_annot.cpp
 cat "$PATCHES/annot-api/fpdf_annot_append.cpp" >> "$SOURCE/fpdfsdk/fpdf_annot.cpp"
