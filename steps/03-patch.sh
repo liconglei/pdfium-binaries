@@ -29,7 +29,7 @@ apply_patch "$PATCHES/public_headers.patch"
 
 # Apply annotation dictionary API extension
 # Insert API declarations into fpdf_annot.h (after FPDFAnnot_GetFormFieldExportValue)
-sed -i '/FPDFAnnot_GetFormFieldExportValue.*buflen);/r '"$PATCHES"'/annot-api/fpdf_annot_h_insert.txt' "$SOURCE/public/fpdf_annot.h"
+sed -i "/FPDFAnnot_GetFormFieldExportValue.*buflen);/r $PATCHES/annot-api/fpdf_annot_h_insert.txt" "$SOURCE/public/fpdf_annot.h"
 
 # Append implementation code to fpdf_annot.cpp
 cat "$PATCHES/annot-api/fpdf_annot_append.cpp" >> "$SOURCE/fpdfsdk/fpdf_annot.cpp"

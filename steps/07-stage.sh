@@ -72,11 +72,16 @@ case "$OS-$BUILD_TYPE" in
     ;;
 esac
 
-if [ -n "$VERSION" ]; then
-  cat >"$STAGING/VERSION" <<END
-MAJOR=$(echo "$VERSION" | cut -d. -f1)
-MINOR=$(echo "$VERSION" | cut -d. -f2)
-BUILD=$(echo "$VERSION" | cut -d. -f3)
-PATCH=$(echo "$VERSION" | cut -d. -f4)
+# Always create VERSION file for traceability
+VERSION_STR="${VERSION:-0.0.0.0}"
+cat >"$STAGING/VERSION" <<END
+MAJOR=$(echo "$VERSION_STR" | cut -d. -f1)
+MINOR=$(echo "$VERSION_STR" | cut -d. -f2)
+BUILD=$(echo "$VERSION_STR" | cut -d. -f3)
+PATCH=$(echo "$VERSION_STR" | cut -d. -f4)
+PDFIUM_BRANCH=${PDFium_BRANCH:-main}
+PDFIUM_TARGET_OS=$OS
+PDFIUM_TARGET_CPU=${PDFium_TARGET_CPU:-}
+BUILD_DATE=$(date -u +%Y-%m-%d)
+BUILD_TYPE=$BUILD_TYPE
 END
-fi
