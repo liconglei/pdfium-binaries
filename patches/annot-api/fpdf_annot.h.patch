@@ -2,7 +2,8 @@ diff --git a/public/fpdf_annot.h b/public/fpdf_annot.h
 index 1234567..abcdefg 100644
 --- a/public/fpdf_annot.h
 +++ b/public/fpdf_annot.h
-@@ -820,6 +820,120 @@ FPDFAnnot_AddFileAttachment(FPDF_ANNOTATION annot, FPDF_WIDESTRING name);
+@@ -817,6 +817,119 @@ FPDF_EXPORT FPDF_ATTACHMENT FPDF_CALLCONV
+ FPDFAnnot_AddFileAttachment(FPDF_ANNOTATION annot, FPDF_WIDESTRING name);
  
  #ifdef __cplusplus
  }  // extern "C"
