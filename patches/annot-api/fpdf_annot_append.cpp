@@ -32,16 +32,11 @@ FPDFAnnot_GetBooleanValue(FPDF_ANNOTATION annot,
   }
 
   RetainPtr<const CPDF_Object> obj = annot_dict->GetObjectFor(key);
-  if (!obj || obj->GetType() != CPDF_Object::Type::kBoolean) {
+  if (!obj || !obj->IsBoolean()) {
     return false;
   }
 
-  const CPDF_Boolean* pBool = obj->AsBoolean();
-  if (!pBool) {
-    return false;
-  }
-
-  *value = pBool->GetInteger();
+  *value = obj->GetInteger();
   return true;
 }
 
@@ -83,17 +78,11 @@ FPDFAnnot_GetNameValue(FPDF_ANNOTATION annot,
     return 0;
   }
 
-  RetainPtr<const CPDF_Object> obj = annot_dict->GetObjectFor(key);
-  if (!obj) {
+  ByteString name_value = annot_dict->GetNameFor(key);
+  if (name_value.IsEmpty()) {
     return 0;
   }
 
-  CPDF_Object::Type type = obj->GetType();
-  if (type != CPDF_Object::Type::kName && type != CPDF_Object::Type::kString) {
-    return 0;
-  }
-
-  ByteString name_value = obj->GetString();
   WideString wide_value = WideString::FromUTF8(name_value.AsStringView());
   return Utf16EncodeMaybeCopyAndReturnLength(
       wide_value, UNSAFE_BUFFERS(SpanFromFPDFApiArgs(buffer, buflen)));
@@ -180,6 +169,10 @@ FPDFAnnot_SetRefValue(FPDF_ANNOTATION annot,
   }
 
   CPDF_AnnotContext* pAnnotContext = CPDFAnnotContextFromFPDFAnnotation(annot);
+  if (!pAnnotContext) {
+    return false;
+  }
+
   CPDF_Document* doc = pAnnotContext->GetPage()->GetDocument();
   if (!doc) {
     return false;
@@ -188,9 +181,6 @@ FPDFAnnot_SetRefValue(FPDF_ANNOTATION annot,
   uint32_t obj_num = target_dict->GetObjNum();
   if (obj_num == 0) {
     obj_num = doc->AddIndirectObject(target_dict);
-    if (obj_num == 0) {
-      return false;
-    }
   }
 
   annot_dict->SetNewFor<CPDF_Reference>(key, doc, obj_num);
@@ -209,6 +199,10 @@ FPDFAnnot_SetRefByObjNum(FPDF_ANNOTATION annot,
   }
 
   CPDF_AnnotContext* pAnnotContext = CPDFAnnotContextFromFPDFAnnotation(annot);
+  if (!pAnnotContext) {
+    return false;
+  }
+
   CPDF_Document* doc = pAnnotContext->GetPage()->GetDocument();
   if (!doc) {
     return false;
