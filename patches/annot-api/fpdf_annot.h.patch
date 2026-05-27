@@ -80,6 +80,7 @@ index 1234567..abcdefg 100644
 +                         FPDF_BYTESTRING key,
 +                         int objNum,
 +                         int genNum);
- 
++
+ // NOLINTNEXTLINE(readability-identifier-naming)
  FPDF_EXPORT FPDF_ATTACHMENT FPDF_CALLCONV
  FPDFAnnot_AddFileAttachment(FPDF_ANNOTATION annot, FPDF_WIDESTRING name);
