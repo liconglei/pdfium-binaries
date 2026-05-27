@@ -1,0 +1,49 @@
+name: Build Android Only
+description: Build only for Android (arm64, arm, x86, x64)
+on:
+  workflow_dispatch:
+    inputs:
+      target_os:
+        description: Target OS (android|emscripten|ios|linux|mac|win)
+        required: true
+        type: choice
+        default: 'android'
+        options:
+          - android
+          - emscripten
+          - ios
+          - linux
+          - mac
+          - win
+      target_cpu:
+        description: Target CPU
+        required: true
+        type: choice
+        default: 'arm64'
+        options:
+          - arm
+          - arm64
+          - x64
+          - x86
+      enable_v8:
+        description: Enable V8
+        type: boolean
+        default: false
+      is_debug:
+        description: Is debug
+        type: boolean
+        default: false
+      version:
+        description: PDFium version
+        default: ""
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      branch: ${{ github.event.inputs.branch }}
+      version: ${{ github.event.inputs.version }}
+      is_debug: ${{ github.event.inputs.is_debug == 'true' }}
+      target_os: android
+      target_cpu: ${{ github.event.inputs.target_cpu }}
+      secrets: inherit
