@@ -36,7 +36,12 @@ FPDFAnnot_GetBooleanValue(FPDF_ANNOTATION annot,
     return false;
   }
 
-  *value = obj->GetBoolean() ? 1 : 0;
+  const CPDF_Boolean* pBool = obj->AsBoolean();
+  if (!pBool) {
+    return false;
+  }
+
+  *value = pBool->GetInteger();
   return true;
 }
 
