@@ -2,7 +2,7 @@ diff --git a/public/fpdf_annot.h b/public/fpdf_annot.h
 index 1234567..abcdefg 100644
 --- a/public/fpdf_annot.h
 +++ b/public/fpdf_annot.h
-@@ -814,8 +814,121 @@ FPDF_EXPORT unsigned long FPDF_CALLCONV
+@@ -814,6 +814,119 @@ FPDF_EXPORT unsigned long FPDF_CALLCONV
  FPDFAnnot_GetFormFieldExportValue(FPDF_FORMHANDLE hHandle,
                                    FPDF_ANNOTATION annot,
                                    FPDF_WCHAR* buffer,
@@ -81,6 +81,6 @@ index 1234567..abcdefg 100644
 +                         int objNum,
 +                         int genNum);
 +
- // NOLINTNEXTLINE(readability-identifier-naming)
- FPDF_EXPORT FPDF_ATTACHMENT FPDF_CALLCONV
- FPDFAnnot_AddFileAttachment(FPDF_ANNOTATION annot, FPDF_WIDESTRING name);
+ // Experimental API.
+ // Add a URI action to |annot|, overwriting the existing action, if any.
+ //

@@ -29,7 +29,12 @@ apply_patch "$PATCHES/public_headers.patch"
 
 # Apply annotation dictionary API extension patches
 apply_patch "$PATCHES/annot-api/fpdf_annot.h.patch"
-apply_patch "$PATCHES/annot-api/fpdf_annot.cpp.patch"
+
+# Append implementation code to fpdf_annot.cpp (avoid complex patch format issues)
+cat "$PATCHES/annot-api/fpdf_annot_append.cpp" >> "$SOURCE/fpdfsdk/fpdf_annot.cpp"
+
+# Add cpdf_null.h include to fpdf_annot.cpp
+sed -i '/#include "core\/fpdfapi\/parser\/cpdf_dictionary.h"/a #include "core/fpdfapi/parser/cpdf_null.h"' "$SOURCE/fpdfsdk/fpdf_annot.cpp"
 
 [ "$ENABLE_V8" == "true" ] && apply_patch "$PATCHES/v8/pdfium.patch"
 
