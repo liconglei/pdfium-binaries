@@ -27,6 +27,10 @@ esac
 
 apply_patch "$PATCHES/public_headers.patch"
 
+# Apply annotation dictionary API extension patches
+apply_patch "$PATCHES/annot-api/fpdf_annot.h.patch"
+apply_patch "$PATCHES/annot-api/fpdf_annot.cpp.patch"
+
 [ "$ENABLE_V8" == "true" ] && apply_patch "$PATCHES/v8/pdfium.patch"
 
 case "$OS" in

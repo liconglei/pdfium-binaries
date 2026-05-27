@@ -1,0 +1,85 @@
+diff --git a/public/fpdf_annot.h b/public/fpdf_annot.h
+index 1234567..abcdefg 100644
+--- a/public/fpdf_annot.h
++++ b/public/fpdf_annot.h
+@@ -823,4 +823,117 @@ FPDFAnnot_AddFileAttachment(FPDF_ANNOTATION annot, FPDF_WIDESTRING name);
+ 
+ #ifdef __cplusplus
+ }  // extern "C"
++
++// ============================================================================
++// Annotation Dictionary Operations API Extension
++// Provides 11 APIs for complete annotation dictionary manipulation
++// ============================================================================
++
++// Set boolean value in annotation dictionary.
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++FPDFAnnot_SetBooleanValue(FPDF_ANNOTATION annot,
++                          FPDF_BYTESTRING key,
++                          FPDF_BOOL value);
++
++// Get boolean value from annotation dictionary.
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++FPDFAnnot_GetBooleanValue(FPDF_ANNOTATION annot,
++                          FPDF_BYTESTRING key,
++                          FPDF_BOOL* value);
++
++// Set number value in annotation dictionary.
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++FPDFAnnot_SetNumberValue(FPDF_ANNOTATION annot,
++                         FPDF_BYTESTRING key,
++                         float value);
++
++// Set name value in annotation dictionary.
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++FPDFAnnot_SetNameValue(FPDF_ANNOTATION annot,
++                       FPDF_BYTESTRING key,
++                       FPDF_BYTESTRING value);
++
++// Get name value from annotation dictionary.
++FPDF_EXPORT unsigned long FPDF_CALLCONV
++FPDFAnnot_GetNameValue(FPDF_ANNOTATION annot,
++                       FPDF_BYTESTRING key,
++                       FPDF_WCHAR* buffer,
++                       unsigned long buflen);
++
++// Set null value in annotation dictionary (key remains, value is null).
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++FPDFAnnot_SetNullValue(FPDF_ANNOTATION annot,
++                       FPDF_BYTESTRING key);
++
++// Remove key from annotation dictionary.
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++FPDFAnnot_RemoveKey(FPDF_ANNOTATION annot,
++                    FPDF_BYTESTRING key);
++
++// Set float array in annotation dictionary.
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++FPDFAnnot_SetFloatArray(FPDF_ANNOTATION annot,
++                        FPDF_BYTESTRING key,
++                        const float* values,
++                        size_t count);
++
++// Set name array in annotation dictionary.
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++FPDFAnnot_SetNameArray(FPDF_ANNOTATION annot,
++                       FPDF_BYTESTRING key,
++                       const FPDF_BYTESTRING* values,
++                       size_t count);
++
++// Set annotation reference in annotation dictionary.
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++FPDFAnnot_SetRefValue(FPDF_ANNOTATION annot,
++                      FPDF_BYTESTRING key,
++                      FPDF_ANNOTATION targetAnnot);
++
++// Set object reference by object number in annotation dictionary.
++FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
++FPDFAnnot_SetRefByObjNum(FPDF_ANNOTATION annot,
++                         FPDF_BYTESTRING key,
++                         int objNum,
++                         int genNum);
++
+ #endif  // __cplusplus
+ 
+ #endif  // PUBLIC_FPDF_ANNOT_H_
