@@ -122,8 +122,8 @@ sed -i '/#include "core\/fpdfapi\/parser\/cpdf_dictionary.h"/a #include "core/fp
 perl -i -pe 'print "    case FPDF_ANNOT_LINE:\n    case FPDF_ANNOT_POLYGON:\n    case FPDF_ANNOT_POLYLINE:\n" if /case FPDF_ANNOT_UNDERLINE:/' "$SOURCE/fpdfsdk/fpdf_annot.cpp"
 
 # Modify FPDFAnnot_IsObjectSupportedSubtype to support LINE, POLYGON, POLYLINE
-# Change the return statement to include these types
-perl -i -pe 's/return subtype == FPDF_ANNOT_INK || subtype == FPDF_ANNOT_STAMP;/return subtype == FPDF_ANNOT_INK || subtype == FPDF_ANNOT_STAMP || subtype == FPDF_ANNOT_LINE || subtype == FPDF_ANNOT_POLYGON || subtype == FPDF_ANNOT_POLYLINE;/' "$SOURCE/fpdfsdk/fpdf_annot.cpp"
+# Only match the exact line with the return statement (including context)
+perl -i -pe 's/^  return subtype == FPDF_ANNOT_INK \|\| subtype == FPDF_ANNOT_STAMP;$/  return subtype == FPDF_ANNOT_INK || subtype == FPDF_ANNOT_STAMP ||\n      subtype == FPDF_ANNOT_LINE || subtype == FPDF_ANNOT_POLYGON ||\n      subtype == FPDF_ANNOT_POLYLINE;/' "$SOURCE/fpdfsdk/fpdf_annot.cpp"
 
 [ "$ENABLE_V8" == "true" ] && apply_patch "$PATCHES/v8/pdfium.patch"
 
