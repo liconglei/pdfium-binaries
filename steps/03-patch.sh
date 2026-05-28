@@ -117,6 +117,14 @@ cat "$PATCHES/annot-api/fpdf_annot_append.cpp" >> "$SOURCE/fpdfsdk/fpdf_annot.cp
 # Add cpdf_null.h include to fpdf_annot.cpp
 sed -i '/#include "core\/fpdfapi\/parser\/cpdf_dictionary.h"/a #include "core/fpdfapi/parser/cpdf_null.h"' "$SOURCE/fpdfsdk/fpdf_annot.cpp"
 
+# Modify FPDFAnnot_IsSupportedSubtype to support LINE, POLYGON, POLYLINE
+# Insert after FPDF_ANNOT_UNDERLINE case
+perl -i -pe 'print "    case FPDF_ANNOT_LINE:\n    case FPDF_ANNOT_POLYGON:\n    case FPDF_ANNOT_POLYLINE:\n" if /case FPDF_ANNOT_UNDERLINE:/' "$SOURCE/fpdfsdk/fpdf_annot.cpp"
+
+# Modify FPDFAnnot_IsObjectSupportedSubtype to support LINE, POLYGON, POLYLINE
+# Change the return statement to include these types
+perl -i -pe 's/return subtype == FPDF_ANNOT_INK || subtype == FPDF_ANNOT_STAMP;/return subtype == FPDF_ANNOT_INK || subtype == FPDF_ANNOT_STAMP || subtype == FPDF_ANNOT_LINE || subtype == FPDF_ANNOT_POLYGON || subtype == FPDF_ANNOT_POLYLINE;/' "$SOURCE/fpdfsdk/fpdf_annot.cpp"
+
 [ "$ENABLE_V8" == "true" ] && apply_patch "$PATCHES/v8/pdfium.patch"
 
 case "$OS" in
