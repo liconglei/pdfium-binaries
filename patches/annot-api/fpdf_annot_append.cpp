@@ -301,7 +301,7 @@ FPDFAnnot_GetNameArrayElement(FPDF_ANNOTATION annot,
     return 0;
   }
 
-  ByteString name_str = array->GetNameAt(static_cast<size_t>(index));
+  ByteString name_str = array->GetByteStringAt(static_cast<size_t>(index));
   WideString wide_value = WideString::FromUTF8(name_str.AsStringView());
 
   return Utf16EncodeMaybeCopyAndReturnLength(
