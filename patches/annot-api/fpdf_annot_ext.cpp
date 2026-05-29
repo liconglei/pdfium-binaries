@@ -33,8 +33,8 @@ const CPDF_Object* ResolveKeyPath(const CPDF_Dictionary* dict,
   }
 
   // Split at first dot
-  ByteString firstKey = path.First(dotPos);
-  ByteString remainingPath = path.Substr(dotPos + 1);
+  ByteString firstKey = path.Left(dotPos);
+  ByteString remainingPath = path.Mid(dotPos + 1, path.GetLength() - dotPos - 1);
 
   // Get the nested dictionary
   RetainPtr<const CPDF_Dictionary> nestedDict = dict->GetDictFor(firstKey);
@@ -68,8 +68,8 @@ CPDF_Dictionary* ResolveOrCreateKeyPath(CPDF_Dictionary* dict,
   }
 
   // Split at first dot
-  ByteString firstKey = path.First(dotPos);
-  ByteString remainingPath = path.Substr(dotPos + 1);
+  ByteString firstKey = path.Left(dotPos);
+  ByteString remainingPath = path.Mid(dotPos + 1, path.GetLength() - dotPos - 1);
 
   // Get or create the nested dictionary
   RetainPtr<CPDF_Dictionary> nestedDict = dict->GetMutableDictFor(firstKey);
@@ -162,7 +162,7 @@ FPDFAnnot_SetStringValueEx(FPDF_ANNOTATION annot,
   }
 
   WideString wide_value = WideStringFromFPDFWideString(value);
-  parentDict->SetNewFor<CPDF_String>(lastKey, wide_value, false);
+  parentDict->SetNewFor<CPDF_String>(lastKey, wide_value.AsStringView());
   return true;
 }
 
