@@ -105,6 +105,39 @@ FPDFAnnot_SetRefByObjNum(FPDF_ANNOTATION annot,
                          FPDF_BYTESTRING key,
                          int objNum,
                          int genNum);
+
+// ============================================================================
+// Float Array Get Operations
+// ============================================================================
+
+// Get the count of elements in a number (float) array.
+FPDF_EXPORT int FPDF_CALLCONV
+FPDFAnnot_GetNumberArrayCount(FPDF_ANNOTATION annot,
+                              FPDF_BYTESTRING key);
+
+// Get a number (float) array value from annotation dictionary.
+FPDF_EXPORT unsigned long FPDF_CALLCONV
+FPDFAnnot_GetNumberArray(FPDF_ANNOTATION annot,
+                         FPDF_BYTESTRING key,
+                         float* buffer,
+                         unsigned long buflen);
+
+// ============================================================================
+// Name Array Get Operations
+// ============================================================================
+
+// Get the count of elements in a name array.
+FPDF_EXPORT int FPDF_CALLCONV
+FPDFAnnot_GetNameArrayCount(FPDF_ANNOTATION annot,
+                             FPDF_BYTESTRING key);
+
+// Get a name array element at the specified index.
+FPDF_EXPORT unsigned long FPDF_CALLCONV
+FPDFAnnot_GetNameArrayElement(FPDF_ANNOTATION annot,
+                              FPDF_BYTESTRING key,
+                              int index,
+                              FPDF_WCHAR* buffer,
+                              unsigned long buflen);
 EOF
 
 # Insert include right before the closing brace of extern "C" block
