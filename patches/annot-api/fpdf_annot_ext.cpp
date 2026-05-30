@@ -1,7 +1,7 @@
-
 // ============================================================================
 // Annotation Dictionary Extension API Implementation
 // Supports dot-notation path access to nested dictionaries
+// Compatible with chromium/7865 branch
 // ============================================================================
 
 namespace {
@@ -11,30 +11,30 @@ namespace {
 // If parentDict is provided, returns the parent dictionary.
 // If lastKey is provided, returns the final key name.
 const CPDF_Object* ResolveKeyPath(const CPDF_Dictionary* dict,
-                                   const char* keyPath,
+                                   const ByteStringView& keyPath,
                                    CPDF_Dictionary** parentDict,
                                    ByteString* lastKey) {
-  if (!dict || !keyPath || *keyPath == '\0') {
+  if (!dict || keyPath.IsEmpty()) {
     return nullptr;
   }
 
-  ByteString path(keyPath);
-  size_t dotPos = path.Find('.');
+  std::optional<size_t> dotPos = keyPath.Find('.');
   
-  if (dotPos == ByteString::kNpos) {
+  if (!dotPos.has_value()) {
     // No dot - direct key access
     if (parentDict) {
       *parentDict = const_cast<CPDF_Dictionary*>(dict);
     }
     if (lastKey) {
-      *lastKey = path;
+      *lastKey = ByteString(keyPath);
     }
-    return dict->GetObjectFor(path);
+    return dict->GetObjectFor(keyPath);
   }
 
   // Split at first dot
-  ByteString firstKey = path.Left(dotPos);
-  ByteString remainingPath = path.Mid(dotPos + 1, path.GetLength() - dotPos - 1);
+  size_t pos = dotPos.value();
+  ByteStringView firstKey = keyPath.First(pos);
+  ByteStringView remainingPath = keyPath.Last(keyPath.GetLength() - pos - 1);
 
   // Get the nested dictionary
   RetainPtr<const CPDF_Dictionary> nestedDict = dict->GetDictFor(firstKey);
@@ -43,33 +43,33 @@ const CPDF_Object* ResolveKeyPath(const CPDF_Dictionary* dict,
   }
 
   // Recursively resolve remaining path
-  return ResolveKeyPath(nestedDict.Get(), remainingPath.c_str(), parentDict, lastKey);
+  return ResolveKeyPath(nestedDict.Get(), remainingPath, parentDict, lastKey);
 }
 
 // Parse dot-notation path and create intermediate dictionaries as needed.
 // Returns the parent dictionary where the final key should be set.
 // If lastKey is provided, returns the final key name.
 CPDF_Dictionary* ResolveOrCreateKeyPath(CPDF_Dictionary* dict,
-                                         const char* keyPath,
+                                         const ByteStringView& keyPath,
                                          ByteString* lastKey) {
-  if (!dict || !keyPath || *keyPath == '\0') {
+  if (!dict || keyPath.IsEmpty()) {
     return nullptr;
   }
 
-  ByteString path(keyPath);
-  size_t dotPos = path.Find('.');
+  std::optional<size_t> dotPos = keyPath.Find('.');
   
-  if (dotPos == ByteString::kNpos) {
+  if (!dotPos.has_value()) {
     // No dot - this is the final key
     if (lastKey) {
-      *lastKey = path;
+      *lastKey = ByteString(keyPath);
     }
     return dict;
   }
 
   // Split at first dot
-  ByteString firstKey = path.Left(dotPos);
-  ByteString remainingPath = path.Mid(dotPos + 1, path.GetLength() - dotPos - 1);
+  size_t pos = dotPos.value();
+  ByteStringView firstKey = keyPath.First(pos);
+  ByteStringView remainingPath = keyPath.Last(keyPath.GetLength() - pos - 1);
 
   // Get or create the nested dictionary
   RetainPtr<CPDF_Dictionary> nestedDict = dict->GetMutableDictFor(firstKey);
@@ -79,7 +79,7 @@ CPDF_Dictionary* ResolveOrCreateKeyPath(CPDF_Dictionary* dict,
   }
 
   // Recursively resolve remaining path
-  return ResolveOrCreateKeyPath(nestedDict.Get(), remainingPath.c_str(), lastKey);
+  return ResolveOrCreateKeyPath(nestedDict.Get(), remainingPath, lastKey);
 }
 
 }  // namespace
@@ -95,9 +95,7 @@ FPDFAnnot_HasKeyEx(FPDF_ANNOTATION annot, FPDF_BYTESTRING key) {
     return false;
   }
 
-  CPDF_Dictionary* parentDict = nullptr;
-  ByteString lastKey;
-  const CPDF_Object* obj = ResolveKeyPath(annot_dict, key, &parentDict, &lastKey);
+  const CPDF_Object* obj = ResolveKeyPath(annot_dict, ByteStringView(key), nullptr, nullptr);
   return obj != nullptr;
 }
 
@@ -108,7 +106,7 @@ FPDFAnnot_GetValueTypeEx(FPDF_ANNOTATION annot, FPDF_BYTESTRING key) {
     return FPDF_OBJECT_UNKNOWN;
   }
 
-  const CPDF_Object* obj = ResolveKeyPath(annot_dict, key, nullptr, nullptr);
+  const CPDF_Object* obj = ResolveKeyPath(annot_dict, ByteStringView(key), nullptr, nullptr);
   if (!obj) {
     return FPDF_OBJECT_UNKNOWN;
   }
@@ -126,7 +124,7 @@ FPDFAnnot_GetStringValueEx(FPDF_ANNOTATION annot,
     return 0;
   }
 
-  const CPDF_Object* obj = ResolveKeyPath(annot_dict, key, nullptr, nullptr);
+  const CPDF_Object* obj = ResolveKeyPath(annot_dict, ByteStringView(key), nullptr, nullptr);
   if (!obj) {
     return 0;
   }
@@ -156,13 +154,13 @@ FPDFAnnot_SetStringValueEx(FPDF_ANNOTATION annot,
   }
 
   ByteString lastKey;
-  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), key, &lastKey);
+  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), ByteStringView(key), &lastKey);
   if (!parentDict || lastKey.IsEmpty()) {
     return false;
   }
 
   WideString wide_value = WideStringFromFPDFWideString(value);
-  parentDict->SetNewFor<CPDF_String>(lastKey, wide_value.AsStringView());
+  parentDict->SetNewFor<CPDF_String>(lastKey.AsStringView(), wide_value.AsStringView());
   return true;
 }
 
@@ -183,7 +181,7 @@ FPDFAnnot_GetNumberValueEx(FPDF_ANNOTATION annot,
     return false;
   }
 
-  const CPDF_Object* obj = ResolveKeyPath(annot_dict, key, nullptr, nullptr);
+  const CPDF_Object* obj = ResolveKeyPath(annot_dict, ByteStringView(key), nullptr, nullptr);
   if (!obj || !obj->IsNumber()) {
     return false;
   }
@@ -203,12 +201,12 @@ FPDFAnnot_SetNumberValueEx(FPDF_ANNOTATION annot,
   }
 
   ByteString lastKey;
-  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), key, &lastKey);
+  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), ByteStringView(key), &lastKey);
   if (!parentDict || lastKey.IsEmpty()) {
     return false;
   }
 
-  parentDict->SetNewFor<CPDF_Number>(lastKey, value);
+  parentDict->SetNewFor<CPDF_Number>(lastKey.AsStringView(), value);
   return true;
 }
 
@@ -229,7 +227,7 @@ FPDFAnnot_GetBooleanValueEx(FPDF_ANNOTATION annot,
     return false;
   }
 
-  const CPDF_Object* obj = ResolveKeyPath(annot_dict, key, nullptr, nullptr);
+  const CPDF_Object* obj = ResolveKeyPath(annot_dict, ByteStringView(key), nullptr, nullptr);
   if (!obj || !obj->IsBoolean()) {
     return false;
   }
@@ -249,12 +247,12 @@ FPDFAnnot_SetBooleanValueEx(FPDF_ANNOTATION annot,
   }
 
   ByteString lastKey;
-  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), key, &lastKey);
+  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), ByteStringView(key), &lastKey);
   if (!parentDict || lastKey.IsEmpty()) {
     return false;
   }
 
-  parentDict->SetNewFor<CPDF_Boolean>(lastKey, value != 0);
+  parentDict->SetNewFor<CPDF_Boolean>(lastKey.AsStringView(), value != 0);
   return true;
 }
 
@@ -272,7 +270,7 @@ FPDFAnnot_GetNameValueEx(FPDF_ANNOTATION annot,
     return 0;
   }
 
-  const CPDF_Object* obj = ResolveKeyPath(annot_dict, key, nullptr, nullptr);
+  const CPDF_Object* obj = ResolveKeyPath(annot_dict, ByteStringView(key), nullptr, nullptr);
   if (!obj || !obj->IsName()) {
     return 0;
   }
@@ -295,12 +293,12 @@ FPDFAnnot_SetNameValueEx(FPDF_ANNOTATION annot,
   }
 
   ByteString lastKey;
-  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), key, &lastKey);
+  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), ByteStringView(key), &lastKey);
   if (!parentDict || lastKey.IsEmpty()) {
     return false;
   }
 
-  parentDict->SetNewFor<CPDF_Name>(lastKey, value);
+  parentDict->SetNewFor<CPDF_Name>(lastKey.AsStringView(), ByteStringView(value));
   return true;
 }
 
@@ -317,12 +315,12 @@ FPDFAnnot_SetNullValueEx(FPDF_ANNOTATION annot, FPDF_BYTESTRING key) {
   }
 
   ByteString lastKey;
-  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), key, &lastKey);
+  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), ByteStringView(key), &lastKey);
   if (!parentDict || lastKey.IsEmpty()) {
     return false;
   }
 
-  parentDict->SetNewFor<CPDF_Null>(lastKey);
+  parentDict->SetNewFor<CPDF_Null>(lastKey.AsStringView());
   return true;
 }
 
@@ -335,12 +333,12 @@ FPDFAnnot_RemoveKeyEx(FPDF_ANNOTATION annot, FPDF_BYTESTRING key) {
   }
 
   ByteString lastKey;
-  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), key, &lastKey);
+  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), ByteStringView(key), &lastKey);
   if (!parentDict || lastKey.IsEmpty()) {
     return false;
   }
 
-  parentDict->RemoveFor(lastKey);
+  parentDict->RemoveFor(lastKey.AsStringView());
   return true;
 }
 
@@ -355,7 +353,7 @@ FPDFAnnot_GetNumberArrayCountEx(FPDF_ANNOTATION annot, FPDF_BYTESTRING key) {
     return -1;
   }
 
-  const CPDF_Object* obj = ResolveKeyPath(annot_dict, key, nullptr, nullptr);
+  const CPDF_Object* obj = ResolveKeyPath(annot_dict, ByteStringView(key), nullptr, nullptr);
   if (!obj || !obj->IsArray()) {
     return -1;
   }
@@ -374,7 +372,7 @@ FPDFAnnot_GetNumberArrayEx(FPDF_ANNOTATION annot,
     return 0;
   }
 
-  const CPDF_Object* obj = ResolveKeyPath(annot_dict, key, nullptr, nullptr);
+  const CPDF_Object* obj = ResolveKeyPath(annot_dict, ByteStringView(key), nullptr, nullptr);
   if (!obj || !obj->IsArray()) {
     return 0;
   }
@@ -408,12 +406,12 @@ FPDFAnnot_SetFloatArrayEx(FPDF_ANNOTATION annot,
   }
 
   ByteString lastKey;
-  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), key, &lastKey);
+  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), ByteStringView(key), &lastKey);
   if (!parentDict || lastKey.IsEmpty()) {
     return false;
   }
 
-  RetainPtr<CPDF_Array> array = parentDict->SetNewFor<CPDF_Array>(lastKey);
+  RetainPtr<CPDF_Array> array = parentDict->SetNewFor<CPDF_Array>(lastKey.AsStringView());
   for (size_t i = 0; i < count; i++) {
     array->AppendNew<CPDF_Number>(values[i]);
   }
@@ -432,7 +430,7 @@ FPDFAnnot_GetNameArrayCountEx(FPDF_ANNOTATION annot, FPDF_BYTESTRING key) {
     return -1;
   }
 
-  const CPDF_Object* obj = ResolveKeyPath(annot_dict, key, nullptr, nullptr);
+  const CPDF_Object* obj = ResolveKeyPath(annot_dict, ByteStringView(key), nullptr, nullptr);
   if (!obj || !obj->IsArray()) {
     return -1;
   }
@@ -452,12 +450,12 @@ FPDFAnnot_GetNameArrayElementEx(FPDF_ANNOTATION annot,
     return 0;
   }
 
-  const CPDF_Object* obj = ResolveKeyPath(annot_dict, key, nullptr, nullptr);
+  const CPDF_Object* obj = ResolveKeyPath(annot_dict, ByteStringView(key), nullptr, nullptr);
   if (!obj || !obj->IsArray()) {
     return 0;
   }
 
-  RetainPtr<const CPDF_Array> array = obj->AsArray();
+  const CPDF_Array* array = obj->AsArray();
   if (index < 0 || static_cast<size_t>(index) >= array->size()) {
     return 0;
   }
@@ -481,17 +479,17 @@ FPDFAnnot_SetNameArrayEx(FPDF_ANNOTATION annot,
   }
 
   ByteString lastKey;
-  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), key, &lastKey);
+  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), ByteStringView(key), &lastKey);
   if (!parentDict || lastKey.IsEmpty()) {
     return false;
   }
 
-  RetainPtr<CPDF_Array> array = parentDict->SetNewFor<CPDF_Array>(lastKey);
+  RetainPtr<CPDF_Array> array = parentDict->SetNewFor<CPDF_Array>(lastKey.AsStringView());
   for (size_t i = 0; i < count; i++) {
     if (!values[i]) {
       return false;
     }
-    array->AppendNew<CPDF_Name>(values[i]);
+    array->AppendNew<CPDF_Name>(ByteStringView(values[i]));
   }
 
   return true;
@@ -525,7 +523,7 @@ FPDFAnnot_SetRefValueEx(FPDF_ANNOTATION annot,
   }
 
   ByteString lastKey;
-  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), key, &lastKey);
+  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), ByteStringView(key), &lastKey);
   if (!parentDict || lastKey.IsEmpty()) {
     return false;
   }
@@ -535,7 +533,7 @@ FPDFAnnot_SetRefValueEx(FPDF_ANNOTATION annot,
     obj_num = doc->AddIndirectObject(target_dict);
   }
 
-  parentDict->SetNewFor<CPDF_Reference>(lastKey, doc, obj_num);
+  parentDict->SetNewFor<CPDF_Reference>(lastKey.AsStringView(), doc, obj_num);
   return true;
 }
 
@@ -567,12 +565,12 @@ FPDFAnnot_SetRefByObjNumEx(FPDF_ANNOTATION annot,
   }
 
   ByteString lastKey;
-  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), key, &lastKey);
+  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), ByteStringView(key), &lastKey);
   if (!parentDict || lastKey.IsEmpty()) {
     return false;
   }
 
-  parentDict->SetNewFor<CPDF_Reference>(lastKey, doc,
+  parentDict->SetNewFor<CPDF_Reference>(lastKey.AsStringView(), doc,
                                         static_cast<uint32_t>(objNum));
   return true;
 }
@@ -590,17 +588,12 @@ FPDFAnnot_SetDictValueEx(FPDF_ANNOTATION annot, FPDF_BYTESTRING key) {
   }
 
   ByteString lastKey;
-  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), key, &lastKey);
+  CPDF_Dictionary* parentDict = ResolveOrCreateKeyPath(annot_dict.Get(), ByteStringView(key), &lastKey);
   if (!parentDict || lastKey.IsEmpty()) {
     return false;
   }
 
-  // If lastKey is not empty, we need to create a dictionary at lastKey
-  // But if there's no dot in the path, ResolveOrCreateKeyPath returns the parent
-  // So we need to create the dictionary at lastKey
-  if (!lastKey.IsEmpty()) {
-    parentDict->SetNewFor<CPDF_Dictionary>(lastKey);
-  }
+  parentDict->SetNewFor<CPDF_Dictionary>(lastKey.AsStringView());
   return true;
 }
 
@@ -622,11 +615,10 @@ FPDFAnnot_GetDictKeys(FPDF_ANNOTATION annot,
     return 2;  // Just null terminator
   }
 
-  // Build comma-separated string
   WideString result;
   for (size_t i = 0; i < keys.size(); i++) {
     if (i > 0) {
-      result += L", ";
+      result += W", ";
     }
     result += WideString::FromUTF8(keys[i].AsStringView());
   }
