@@ -37,7 +37,7 @@ const CPDF_Object* ResolveKeyPath(const CPDF_Dictionary* dict,
   ByteStringView remainingPath = keyPath.Last(keyPath.GetLength() - pos - 1);
 
   // Get the nested dictionary
-  RetainPtr<const CPDF_Dictionary> nestedDict = dict->GetDictFor(ByteString(firstKey));
+  RetainPtr<const CPDF_Dictionary> nestedDict = dict->GetDictFor(firstKey);
   if (!nestedDict) {
     return nullptr;
   }
@@ -72,7 +72,7 @@ CPDF_Dictionary* ResolveOrCreateKeyPath(CPDF_Dictionary* dict,
   ByteStringView remainingPath = keyPath.Last(keyPath.GetLength() - pos - 1);
 
   // Get or create the nested dictionary
-  RetainPtr<CPDF_Dictionary> nestedDict = dict->GetMutableDictFor(ByteString(firstKey));
+  RetainPtr<CPDF_Dictionary> nestedDict = dict->GetMutableDictFor(firstKey);
   if (!nestedDict) {
     // Create a new dictionary at this key
     nestedDict = dict->SetNewFor<CPDF_Dictionary>(ByteString(firstKey));
