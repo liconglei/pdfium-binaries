@@ -31,22 +31,23 @@ apply_patch "$PATCHES/public_headers.patch"
 # 25 Ex APIs with dot-notation path support
 
 # Create the extension header file
-cp "$PATCHES/annot-api/fpdf_annot_ext.h" "$SOURCE/public/fpdf_annot_ext.h"
+cp "$PATCHES/annot-api/fpdf_annot_ext.h" "public/fpdf_annot_ext.h"
 
 # Insert include right before the closing brace of extern "C" block
-perl -i -pe 'print "#include \"fpdf_annot_ext.h\"\n" if /^}\s*\/\/\s*extern\s+"C"/' "$SOURCE/public/fpdf_annot.h"
+# Match "}  // extern "C"" pattern
+perl -i -pe 'print "#include \"fpdf_annot_ext.h\"\n" if /^\}\s*\/\/\s*extern\s+"C"/' "public/fpdf_annot.h"
 
 # Append implementation code to fpdf_annot.cpp
-cat "$PATCHES/annot-api/fpdf_annot_ext.cpp" >> "$SOURCE/fpdfsdk/fpdf_annot.cpp"
+cat "$PATCHES/annot-api/fpdf_annot_ext.cpp" >> "fpdfsdk/fpdf_annot.cpp"
 
 # Add required includes to fpdf_annot.cpp
-sed -i '/#include "core\/fpdfapi\/parser\/cpdf_dictionary.h"/a #include "core/fpdfapi/parser/cpdf_null.h"' "$SOURCE/fpdfsdk/fpdf_annot.cpp"
+sed -i '/#include "core\/fpdfapi\/parser\/cpdf_dictionary.h"/a #include "core/fpdfapi/parser/cpdf_null.h"' "fpdfsdk/fpdf_annot.cpp"
 
 # Modify FPDFAnnot_IsSupportedSubtype to support LINE, POLYGON, POLYLINE
-perl -i -pe 'print "    case FPDF_ANNOT_LINE:\n    case FPDF_ANNOT_POLYGON:\n    case FPDF_ANNOT_POLYLINE:\n" if /case FPDF_ANNOT_UNDERLINE:/' "$SOURCE/fpdfsdk/fpdf_annot.cpp"
+perl -i -pe 'print "    case FPDF_ANNOT_LINE:\n    case FPDF_ANNOT_POLYGON:\n    case FPDF_ANNOT_POLYLINE:\n" if /case FPDF_ANNOT_UNDERLINE:/' "fpdfsdk/fpdf_annot.cpp"
 
 # Modify FPDFAnnot_IsObjectSupportedSubtype to support LINE, POLYGON, POLYLINE
-perl -i -pe 's/^  return subtype == FPDF_ANNOT_INK \|\| subtype == FPDF_ANNOT_STAMP;$/  return subtype == FPDF_ANNOT_INK || subtype == FPDF_ANNOT_STAMP ||\n      subtype == FPDF_ANNOT_LINE || subtype == FPDF_ANNOT_POLYGON ||\n      subtype == FPDF_ANNOT_POLYLINE;/' "$SOURCE/fpdfsdk/fpdf_annot.cpp"
+perl -i -pe 's/^  return subtype == FPDF_ANNOT_INK \|\| subtype == FPDF_ANNOT_STAMP;$/  return subtype == FPDF_ANNOT_INK || subtype == FPDF_ANNOT_STAMP ||\n      subtype == FPDF_ANNOT_LINE || subtype == FPDF_ANNOT_POLYGON ||\n      subtype == FPDF_ANNOT_POLYLINE;/' "fpdfsdk/fpdf_annot.cpp"
 
 [ "$ENABLE_V8" == "true" ] && apply_patch "$PATCHES/v8/pdfium.patch"
 
