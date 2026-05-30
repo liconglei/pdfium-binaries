@@ -37,7 +37,7 @@ const CPDF_Object* ResolveKeyPath(const CPDF_Dictionary* dict,
   ByteStringView remainingPath = keyPath.Last(keyPath.GetLength() - pos - 1);
 
   // Get the nested dictionary
-  RetainPtr<const CPDF_Dictionary> nestedDict = dict->GetDictFor(firstKey);
+  RetainPtr<const CPDF_Dictionary> nestedDict = dict->GetDictFor(ByteString(firstKey));
   if (!nestedDict) {
     return nullptr;
   }
@@ -72,10 +72,10 @@ CPDF_Dictionary* ResolveOrCreateKeyPath(CPDF_Dictionary* dict,
   ByteStringView remainingPath = keyPath.Last(keyPath.GetLength() - pos - 1);
 
   // Get or create the nested dictionary
-  RetainPtr<CPDF_Dictionary> nestedDict = dict->GetMutableDictFor(firstKey);
+  RetainPtr<CPDF_Dictionary> nestedDict = dict->GetMutableDictFor(ByteString(firstKey));
   if (!nestedDict) {
     // Create a new dictionary at this key
-    nestedDict = dict->SetNewFor<CPDF_Dictionary>(firstKey);
+    nestedDict = dict->SetNewFor<CPDF_Dictionary>(ByteString(firstKey));
   }
 
   // Recursively resolve remaining path
@@ -160,7 +160,7 @@ FPDFAnnot_SetStringValueEx(FPDF_ANNOTATION annot,
   }
 
   WideString wide_value = WideStringFromFPDFWideString(value);
-  parentDict->SetNewFor<CPDF_String>(lastKey.AsStringView(), wide_value.AsStringView());
+  parentDict->SetNewFor<CPDF_String>(lastKey, wide_value.AsStringView());
   return true;
 }
 
@@ -206,7 +206,7 @@ FPDFAnnot_SetNumberValueEx(FPDF_ANNOTATION annot,
     return false;
   }
 
-  parentDict->SetNewFor<CPDF_Number>(lastKey.AsStringView(), value);
+  parentDict->SetNewFor<CPDF_Number>(lastKey, value);
   return true;
 }
 
@@ -252,7 +252,7 @@ FPDFAnnot_SetBooleanValueEx(FPDF_ANNOTATION annot,
     return false;
   }
 
-  parentDict->SetNewFor<CPDF_Boolean>(lastKey.AsStringView(), value != 0);
+  parentDict->SetNewFor<CPDF_Boolean>(lastKey, value != 0);
   return true;
 }
 
@@ -298,7 +298,7 @@ FPDFAnnot_SetNameValueEx(FPDF_ANNOTATION annot,
     return false;
   }
 
-  parentDict->SetNewFor<CPDF_Name>(lastKey.AsStringView(), ByteStringView(value));
+  parentDict->SetNewFor<CPDF_Name>(lastKey, ByteString(value));
   return true;
 }
 
@@ -320,7 +320,7 @@ FPDFAnnot_SetNullValueEx(FPDF_ANNOTATION annot, FPDF_BYTESTRING key) {
     return false;
   }
 
-  parentDict->SetNewFor<CPDF_Null>(lastKey.AsStringView());
+  parentDict->SetNewFor<CPDF_Null>(lastKey);
   return true;
 }
 
@@ -411,7 +411,7 @@ FPDFAnnot_SetFloatArrayEx(FPDF_ANNOTATION annot,
     return false;
   }
 
-  RetainPtr<CPDF_Array> array = parentDict->SetNewFor<CPDF_Array>(lastKey.AsStringView());
+  RetainPtr<CPDF_Array> array = parentDict->SetNewFor<CPDF_Array>(lastKey);
   for (size_t i = 0; i < count; i++) {
     array->AppendNew<CPDF_Number>(values[i]);
   }
@@ -484,12 +484,12 @@ FPDFAnnot_SetNameArrayEx(FPDF_ANNOTATION annot,
     return false;
   }
 
-  RetainPtr<CPDF_Array> array = parentDict->SetNewFor<CPDF_Array>(lastKey.AsStringView());
+  RetainPtr<CPDF_Array> array = parentDict->SetNewFor<CPDF_Array>(lastKey);
   for (size_t i = 0; i < count; i++) {
     if (!values[i]) {
       return false;
     }
-    array->AppendNew<CPDF_Name>(ByteStringView(values[i]));
+    array->AppendNew<CPDF_Name>(ByteString(values[i]));
   }
 
   return true;
@@ -533,7 +533,7 @@ FPDFAnnot_SetRefValueEx(FPDF_ANNOTATION annot,
     obj_num = doc->AddIndirectObject(target_dict);
   }
 
-  parentDict->SetNewFor<CPDF_Reference>(lastKey.AsStringView(), doc, obj_num);
+  parentDict->SetNewFor<CPDF_Reference>(lastKey, doc, obj_num);
   return true;
 }
 
@@ -570,7 +570,7 @@ FPDFAnnot_SetRefByObjNumEx(FPDF_ANNOTATION annot,
     return false;
   }
 
-  parentDict->SetNewFor<CPDF_Reference>(lastKey.AsStringView(), doc,
+  parentDict->SetNewFor<CPDF_Reference>(lastKey, doc,
                                         static_cast<uint32_t>(objNum));
   return true;
 }
@@ -593,7 +593,7 @@ FPDFAnnot_SetDictValueEx(FPDF_ANNOTATION annot, FPDF_BYTESTRING key) {
     return false;
   }
 
-  parentDict->SetNewFor<CPDF_Dictionary>(lastKey.AsStringView());
+  parentDict->SetNewFor<CPDF_Dictionary>(lastKey);
   return true;
 }
 
@@ -618,7 +618,7 @@ FPDFAnnot_GetDictKeys(FPDF_ANNOTATION annot,
   WideString result;
   for (size_t i = 0; i < keys.size(); i++) {
     if (i > 0) {
-      result += W", ";
+      result += L", ";
     }
     result += WideString::FromUTF8(keys[i].AsStringView());
   }
