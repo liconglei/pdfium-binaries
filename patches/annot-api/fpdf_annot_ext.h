@@ -14,7 +14,7 @@ extern "C" {
 // ============================================================================
 // Annotation Dictionary Extension API
 // 
-// This header provides 25 extended APIs for complete annotation dictionary
+// This header provides 22 extended APIs for complete annotation dictionary
 // manipulation, supporting dot-notation path access to nested dictionaries.
 //
 // Key Features:
