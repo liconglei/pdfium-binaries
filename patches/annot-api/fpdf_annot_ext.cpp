@@ -360,7 +360,7 @@ FPDFAnnot_GetNumberArrayCountEx(FPDF_ANNOTATION annot, FPDF_BYTESTRING key) {
     return -1;
   }
 
-  RetainPtr<const CPDF_Array> array = obj->AsArray();
+  const CPDF_Array* array = obj->AsArray();
   return static_cast<int>(array->size());
 }
 
@@ -379,7 +379,7 @@ FPDFAnnot_GetNumberArrayEx(FPDF_ANNOTATION annot,
     return 0;
   }
 
-  RetainPtr<const CPDF_Array> array = obj->AsArray();
+  const CPDF_Array* array = obj->AsArray();
   size_t count = array->size();
 
   if (!buffer || buflen == 0) {
@@ -437,7 +437,7 @@ FPDFAnnot_GetNameArrayCountEx(FPDF_ANNOTATION annot, FPDF_BYTESTRING key) {
     return -1;
   }
 
-  RetainPtr<const CPDF_Array> array = obj->AsArray();
+  const CPDF_Array* array = obj->AsArray();
   return static_cast<int>(array->size());
 }
 
