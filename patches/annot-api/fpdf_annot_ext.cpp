@@ -626,3 +626,52 @@ FPDFAnnot_GetDictKeys(FPDF_ANNOTATION annot,
   return Utf16EncodeMaybeCopyAndReturnLength(
       result, UNSAFE_BUFFERS(SpanFromFPDFApiArgs(buffer, buflen)));
 }
+
+// ============================================================================
+// Section 11: Appearance Stream Generation
+// ============================================================================
+
+FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
+FPDFAnnot_GenerateAPEx(FPDF_ANNOTATION annot) {
+  if (!annot) {
+    return false;
+  }
+
+  CPDF_AnnotContext* pAnnotContext = CPDFAnnotContextFromFPDFAnnotation(annot);
+  if (!pAnnotContext) {
+    return false;
+  }
+
+  RetainPtr<CPDF_Dictionary> pAnnotDict = pAnnotContext->GetMutableAnnotDict();
+  if (!pAnnotDict) {
+    return false;
+  }
+
+  // If /AP/N already exists, do not overwrite.
+  RetainPtr<const CPDF_Dictionary> pAP = pAnnotDict->GetDictFor("AP");
+  if (pAP) {
+    if (pAP->GetDictFor("N") || pAP->GetStreamFor("N")) {
+      return false;
+    }
+  }
+
+  CPDF_Document* pDoc = pAnnotContext->GetPage()->GetDocument();
+  if (!pDoc) {
+    return false;
+  }
+
+  // Ensure AcroForm dict exists with /DR/Font.
+  RetainPtr<CPDF_Dictionary> pRoot = pDoc->GetMutableRoot();
+  if (pRoot) {
+    RetainPtr<CPDF_Dictionary> pAcroForm = pRoot->GetMutableDictFor("AcroForm");
+    if (!pAcroForm) {
+      CPDF_InteractiveForm::InitAcroFormDict(pDoc);
+    }
+  }
+
+  // Get annotation subtype from dictionary.
+  CPDF_Annot::Subtype subtype = CPDF_Annot::StringToAnnotSubtype(
+      pAnnotDict->GetNameFor("Subtype"));
+
+  return CPDF_GenerateAP::GenerateAnnotAP(pDoc, pAnnotDict.Get(), subtype);
+}

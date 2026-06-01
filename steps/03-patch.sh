@@ -28,7 +28,7 @@ esac
 apply_patch "$PATCHES/public_headers.patch"
 
 # Apply annotation dictionary API extension
-# 25 Ex APIs with dot-notation path support
+# 23 Ex APIs with dot-notation path support + AP stream generation
 
 # Create the extension header file
 cp "$PATCHES/annot-api/fpdf_annot_ext.h" "public/fpdf_annot_ext.h"
@@ -42,6 +42,10 @@ cat "$PATCHES/annot-api/fpdf_annot_ext.cpp" >> "fpdfsdk/fpdf_annot.cpp"
 
 # Add required includes to fpdf_annot.cpp
 sed -i '/#include "core\/fpdfapi\/parser\/cpdf_dictionary.h"/a #include "core/fpdfapi/parser/cpdf_null.h"' "fpdfsdk/fpdf_annot.cpp"
+
+# Add includes for AP stream generation
+sed -i '/#include "core\/fpdfapi\/page\/cpdf_annotcontext.h"/a #include "core/fpdfdoc/cpdf_generateap.h"' "fpdfsdk/fpdf_annot.cpp"
+sed -i '/#include "core\/fpdfapi\/page\/cpdf_annotcontext.h"/a #include "core/fpdfdoc/cpdf_interactiveform.h"' "fpdfsdk/fpdf_annot.cpp"
 
 # Modify FPDFAnnot_IsSupportedSubtype to support LINE, POLYGON, POLYLINE
 perl -i -pe 'print "    case FPDF_ANNOT_LINE:\n    case FPDF_ANNOT_POLYGON:\n    case FPDF_ANNOT_POLYLINE:\n" if /case FPDF_ANNOT_UNDERLINE:/' "fpdfsdk/fpdf_annot.cpp"

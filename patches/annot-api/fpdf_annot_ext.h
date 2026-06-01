@@ -14,7 +14,7 @@ extern "C" {
 // ============================================================================
 // Annotation Dictionary Extension API
 // 
-// This header provides 22 extended APIs for complete annotation dictionary
+// This header provides 23 extended APIs for complete annotation dictionary
 // manipulation, supporting dot-notation path access to nested dictionaries.
 //
 // Key Features:
@@ -212,6 +212,40 @@ FPDF_EXPORT unsigned long FPDF_CALLCONV
 FPDFAnnot_GetDictKeys(FPDF_ANNOTATION annot,
                       FPDF_WCHAR* buffer,
                       unsigned long buflen);
+
+// ----------------------------------------------------------------------------
+// Section 11: Appearance Stream Generation (1 API)
+// ----------------------------------------------------------------------------
+
+// Generate the appearance stream (/AP/N) for an annotation by reading its
+// dictionary properties and creating a Form XObject.
+//
+// For FreeText annotations, this produces a complete appearance stream including:
+//   - Background fill (from /C array)
+//   - Border drawing (from /BS dictionary, all styles: S/D/B/I/U)
+//   - Multi-line text with word wrapping (from /Contents)
+//   - Text alignment (from /Q: 0=left, 1=center, 2=right)
+//   - Font, size, color from /DA string
+//   - Opacity (from /CA, written to ExtGState)
+//
+// For Ink annotations, generates stroke paths from /InkList.
+// For markup annotations (Highlight/Underline/StrikeOut/Squiggly),
+// generates QuadPoints-based appearance.
+// For Square/Circle, generates shape paths.
+// For Text, generates icon appearance.
+// For Popup, generates popup window appearance.
+//
+// Line annotations are NOT supported (returns false).
+//
+// If the annotation already has /AP/N defined, this function returns false.
+// To force regeneration, remove the existing AP first.
+//
+// Requires the document to have an AcroForm dictionary. If missing, one is
+// created automatically with default /DR/Font entries.
+//
+// Returns true if AP stream was generated successfully, false otherwise.
+FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
+FPDFAnnot_GenerateAPEx(FPDF_ANNOTATION annot);
 
 #ifdef __cplusplus
 }
