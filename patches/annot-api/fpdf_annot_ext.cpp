@@ -517,7 +517,12 @@ FPDFAnnot_SetRefValueEx(FPDF_ANNOTATION annot,
     return false;
   }
 
-  CPDF_Document* doc = pAnnotContext->GetPage()->GetDocument();
+  IPDF_Page* pPage = pAnnotContext->GetPage();
+  if (!pPage) {
+    return false;
+  }
+  
+  CPDF_Document* doc = pPage->GetDocument();
   if (!doc) {
     return false;
   }
@@ -553,7 +558,12 @@ FPDFAnnot_SetRefByObjNumEx(FPDF_ANNOTATION annot,
     return false;
   }
 
-  CPDF_Document* doc = pAnnotContext->GetPage()->GetDocument();
+  IPDF_Page* pPage = pAnnotContext->GetPage();
+  if (!pPage) {
+    return false;
+  }
+  
+  CPDF_Document* doc = pPage->GetDocument();
   if (!doc) {
     return false;
   }
@@ -660,6 +670,12 @@ FPDFAnnot_GenerateAPEx(FPDF_ANNOTATION annot) {
     return false;
   }
 
+  // Verify page is still valid (not closed via FPDF_ClosePage)
+  const CPDF_Dictionary* pPageDict = pPage->GetDict();
+  if (!pPageDict) {
+    return false;
+  }
+
   CPDF_Document* pDoc = pPage->GetDocument();
   if (!pDoc) {
     return false;
@@ -674,6 +690,12 @@ FPDFAnnot_GenerateAPEx(FPDF_ANNOTATION annot) {
   RetainPtr<CPDF_Dictionary> pAcroForm = pRoot->GetMutableDictFor("AcroForm");
   if (!pAcroForm) {
     CPDF_InteractiveForm::InitAcroFormDict(pDoc);
+    pAcroForm = pRoot->GetMutableDictFor("AcroForm");
+  }
+  
+  // Verify AcroForm and DR exist for FreeText AP generation
+  if (!pAcroForm || !pAcroForm->GetDictFor("DR")) {
+    return false;
   }
 
   // Get annotation subtype from dictionary.
