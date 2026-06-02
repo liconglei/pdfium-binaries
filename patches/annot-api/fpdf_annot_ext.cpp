@@ -670,12 +670,6 @@ FPDFAnnot_GenerateAPEx(FPDF_ANNOTATION annot) {
     return false;
   }
 
-  // Verify page is still valid (not closed via FPDF_ClosePage)
-  const CPDF_Dictionary* pPageDict = pPage->GetDict();
-  if (!pPageDict) {
-    return false;
-  }
-
   CPDF_Document* pDoc = pPage->GetDocument();
   if (!pDoc) {
     return false;
