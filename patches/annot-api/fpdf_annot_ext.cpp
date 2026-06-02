@@ -698,3 +698,26 @@ FPDFAnnot_GenerateAPEx(FPDF_ANNOTATION annot) {
 
   return CPDF_GenerateAP::GenerateAnnotAP(pDoc, pAnnotDict.Get(), subtype);
 }
+
+// ============================================================================
+// Section 12: Font Object Number Access
+// ============================================================================
+
+FPDF_EXPORT int FPDF_CALLCONV
+FPDFFont_GetObjNumEx(FPDF_FONT font) {
+  if (!font) {
+    return 0;
+  }
+
+  CPDF_Font* pFont = CPDFFontFromFPDFFont(font);
+  if (!pFont) {
+    return 0;
+  }
+
+  const CPDF_Dictionary* pFontDict = pFont->GetFontDict();
+  if (!pFontDict) {
+    return 0;
+  }
+
+  return static_cast<int>(pFontDict->GetObjNum());
+}

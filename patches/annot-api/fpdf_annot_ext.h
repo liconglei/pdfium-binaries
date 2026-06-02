@@ -14,7 +14,7 @@ extern "C" {
 // ============================================================================
 // Annotation Dictionary Extension API
 // 
-// This header provides 23 extended APIs for complete annotation dictionary
+// This header provides 24 extended APIs for complete annotation dictionary
 // manipulation, supporting dot-notation path access to nested dictionaries.
 //
 // Key Features:
@@ -246,6 +246,17 @@ FPDFAnnot_GetDictKeys(FPDF_ANNOTATION annot,
 // Returns true if AP stream was generated successfully, false otherwise.
 FPDF_EXPORT FPDF_BOOL FPDF_CALLCONV
 FPDFAnnot_GenerateAPEx(FPDF_ANNOTATION annot);
+
+// ----------------------------------------------------------------------------
+// Section 12: Font Object Number Access (1 API)
+// ----------------------------------------------------------------------------
+
+// Get the object number of the font dictionary for an FPDF_FONT.
+// Needed when loading a CIDFont via FPDFText_LoadFont and registering it
+// in AcroForm/DR/Font so that GenerateFreeTextAP can find it for CJK text.
+// Returns 0 on error or if font is not an indirect object.
+FPDF_EXPORT int FPDF_CALLCONV
+FPDFFont_GetObjNumEx(FPDF_FONT font);
 
 #ifdef __cplusplus
 }

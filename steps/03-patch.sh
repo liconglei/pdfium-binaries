@@ -47,6 +47,9 @@ sed -i '/#include "core\/fpdfapi\/parser\/cpdf_dictionary.h"/a #include "core/fp
 sed -i '/#include "core\/fpdfapi\/page\/cpdf_annotcontext.h"/a #include "core/fpdfdoc/cpdf_generateap.h"' "fpdfsdk/fpdf_annot.cpp"
 sed -i '/#include "core\/fpdfapi\/page\/cpdf_annotcontext.h"/a #include "core/fpdfdoc/cpdf_interactiveform.h"' "fpdfsdk/fpdf_annot.cpp"
 
+# Add includes for Font API
+sed -i '/#include "core\/fpdfapi\/page\/cpdf_annotcontext.h"/a #include "core/fpdfapi/font/cpdf_font.h"' "fpdfsdk/fpdf_annot.cpp"
+
 # Modify FPDFAnnot_IsSupportedSubtype to support LINE, POLYGON, POLYLINE
 perl -i -pe 'print "    case FPDF_ANNOT_LINE:\n    case FPDF_ANNOT_POLYGON:\n    case FPDF_ANNOT_POLYLINE:\n" if /case FPDF_ANNOT_UNDERLINE:/' "fpdfsdk/fpdf_annot.cpp"
 
