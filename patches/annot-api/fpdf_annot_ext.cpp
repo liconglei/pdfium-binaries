@@ -655,18 +655,25 @@ FPDFAnnot_GenerateAPEx(FPDF_ANNOTATION annot) {
     }
   }
 
-  CPDF_Document* pDoc = pAnnotContext->GetPage()->GetDocument();
+  IPDF_Page* pPage = pAnnotContext->GetPage();
+  if (!pPage) {
+    return false;
+  }
+
+  CPDF_Document* pDoc = pPage->GetDocument();
   if (!pDoc) {
     return false;
   }
 
   // Ensure AcroForm dict exists with /DR/Font.
   RetainPtr<CPDF_Dictionary> pRoot = pDoc->GetMutableRoot();
-  if (pRoot) {
-    RetainPtr<CPDF_Dictionary> pAcroForm = pRoot->GetMutableDictFor("AcroForm");
-    if (!pAcroForm) {
-      CPDF_InteractiveForm::InitAcroFormDict(pDoc);
-    }
+  if (!pRoot) {
+    return false;
+  }
+
+  RetainPtr<CPDF_Dictionary> pAcroForm = pRoot->GetMutableDictFor("AcroForm");
+  if (!pAcroForm) {
+    CPDF_InteractiveForm::InitAcroFormDict(pDoc);
   }
 
   // Get annotation subtype from dictionary.
