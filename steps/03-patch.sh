@@ -54,7 +54,7 @@ sed -i '/#include "core\/fpdfapi\/page\/cpdf_annotcontext.h"/a #include "core/fp
 perl -i -pe 'print "  vt.SetMultiLine(true);\n  vt.SetAutoReturn(true);\n" if /vt\.SetAlignment.*GetIntegerFor.*"Q"/' "core/fpdfdoc/cpdf_generateap.cpp"
 
 # Fix FreeText character spacing (Tc) support: parse Tc from DA and write to content stream
-sed -i -f "$PATCHES/annot-api/freetext-tc.sed" "core/fpdfdoc/cpdf_generateap.cpp"
+perl -i -0777 -pe "$(cat $PATCHES/annot-api/freetext-tc.pl)" "core/fpdfdoc/cpdf_generateap.cpp"
 
 # Modify FPDFAnnot_IsSupportedSubtype to support LINE, POLYGON, POLYLINE
 perl -i -pe 'print "    case FPDF_ANNOT_LINE:\n    case FPDF_ANNOT_POLYGON:\n    case FPDF_ANNOT_POLYLINE:\n" if /case FPDF_ANNOT_UNDERLINE:/' "fpdfsdk/fpdf_annot.cpp"
