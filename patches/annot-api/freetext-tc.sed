@@ -1,0 +1,21 @@
+# Fix FreeText character spacing (Tc) support
+# Insert Tc parsing code after "appearance_stream << "BT\n"" line in GenerateFreeTextAP
+/appearance_stream << "BT\\n"/a\
+  ByteString da_str = annot_dict->GetStringFor("DA");\
+  std::optional<size_t> tc_pos = da_str.Find(" Tc");\
+  if (tc_pos.has_value()) {\
+    size_t end = tc_pos.value();\
+    size_t start = 0;\
+    ByteStringView da_view = da_str.AsStringView();\
+    for (size_t i = end; i > 0; --i) {\
+      if (da_view[i - 1] == ' ') {\
+        start = i;\
+        break;\
+      }\
+    }\
+    if (end > start) {\
+      ByteString tc_num = ByteString(da_view.Substr(start, end - start));\
+      float tc_val = atof(tc_num.c_str());\
+      appearance_stream << tc_val << " Tc\\n";\
+    }\
+  }
