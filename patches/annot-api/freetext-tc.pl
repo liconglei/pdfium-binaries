@@ -1,7 +1,7 @@
 # Fix FreeText character spacing (Tc) support in GenerateFreeTextAP
 # perl script: insert Tc parsing code after the BT line that's followed by GenerateColorAP
 # This uses slurp mode (-0777) to match across lines
-s{(appearance_stream << "BT\\n"\n\s+<< GenerateColorAP)}{  ByteString da_str = annot_dict->GetStringFor("DA");
+s{(appearance_stream << "BT\\n"\n\s+<< GenerateColorAP)}{  ByteString da_str = annot_dict->GetByteStringFor("DA");
   std::optional<size_t> tc_pos = da_str.Find(" Tc");
   if (tc_pos.has_value()) {
     size_t end = tc_pos.value();
